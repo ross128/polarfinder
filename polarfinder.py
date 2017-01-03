@@ -3,22 +3,54 @@
 
 import tkinter as tk
 from math import cos, sin
+import os
+import configparser
 import ephem
 
 class PolarFinder(tk.Tk):
 	"""Polar finder window"""
 
-	def __init__(self, size=400):
+	def __init__(self, size=400, configfile='~/.config/polarfinder.ini'):
 		super(PolarFinder, self).__init__()
 		self.wm_title('PolarFinder')
 		self.configure(background='#000000')
 		self.size = size
 
+		#configuration
+		self.configfile = os.path.expanduser(configfile)
+		self.config = configparser.ConfigParser()
+		self.config.read(self.configfile)
+
 		#canvas for drawing circle
 		self.canvas = tk.Canvas(self, width=self.size, height=self.size, background='#000000', highlightthickness=0)
-		self.canvas.pack(side=tk.TOP)
+		self.canvas.grid(row=0, columnspan=2, sticky=tk.N)
+
+		#latitude input
+		self.latitude = tk.StringVar(value=self.config.get('observer', 'latitude', fallback=0.0))
+		self.latitude.trace('w', lambda *args: self.update_config())
+		self.lat_label = tk.Label(self, text='Latitude:', background='#000000', foreground='#ff0000')
+		self.lat_label.grid(row=1, column=0, sticky=tk.E)
+		self.lat_input = tk.Entry(self, textvariable=self.latitude, background='#000000', foreground='#ff0000', highlightbackground='#ff0000')
+		self.lat_input.grid(row=1, column=1, sticky=tk.W)
+
+		#longitude input
+		self.longitude = tk.StringVar(value=self.config.get('observer', 'longitude', fallback=0.0))
+		self.longitude.trace('w', lambda *args: self.update_config())
+		self.lon_label = tk.Label(self, text='Longitude:', background='#000000', foreground='#ff0000')
+		self.lon_label.grid(row=2, column=0, sticky=tk.E)
+		self.lon_input = tk.Entry(self, textvariable=self.longitude, background='#000000', foreground='#ff0000', highlightbackground='#ff0000')
+		self.lon_input.grid(row=2, column=1, sticky=tk.W)
 
 		self.update()
+
+	def update_config(self):
+		#update config file
+		if not self.config.has_section('observer'):
+			self.config.add_section('observer')
+		self.config.set('observer', 'longitude', self.longitude.get())
+		self.config.set('observer', 'latitude', self.latitude.get())
+		with open(self.configfile, 'w') as cf:
+			self.config.write(cf)
 
 	def update(self):
 		"""update the PolarFinder window"""
