@@ -101,6 +101,11 @@ class PolarFinder(tk.Tk):
 		self.lst_label.config(text='Local Sidereal Time: ' + str(observer.sidereal_time()))
 		self.hour_angle_label.config(text='Polaris Hour Angle: ' + str(ha))
 
+		#polaris
+		theta = float(ha) + ephem.pi/2
+		self.canvas.create_line(c_x, c_y, c_x+r[0]*cos(theta), c_y-r[0]*sin(theta), fill="#ff0000", width=2)
+		self.canvas.create_oval(c_x+r[3]*cos(theta)-5, c_y-r[3]*sin(theta)-5, c_x+r[3]*cos(theta)+5, c_y-r[3]*sin(theta)+5, fill="#ff0000")
+
 		#update every second
 		self.after(1000, self.update)
 
