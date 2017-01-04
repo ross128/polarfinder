@@ -25,21 +25,29 @@ class PolarFinder(tk.Tk):
 		self.canvas = tk.Canvas(self, width=self.size, height=self.size, background='#000000', highlightthickness=0)
 		self.canvas.grid(row=0, columnspan=2, sticky=tk.N)
 
+		#label for Local Sidereal Time
+		self.lst_label = tk.Label(self, background='#000000', foreground='#ff0000')
+		self.lst_label.grid(row=1, columnspan=2)
+
+		#label for Hour Angle
+		self.hour_angle_label = tk.Label(self, background='#000000', foreground='#ff0000')
+		self.hour_angle_label.grid(row=2, columnspan=2)
+
 		#latitude input
 		self.latitude = tk.StringVar(value=self.config.get('observer', 'latitude', fallback=0.0))
 		self.latitude.trace('w', lambda *args: self.update_config())
 		self.lat_label = tk.Label(self, text='Latitude:', background='#000000', foreground='#ff0000')
-		self.lat_label.grid(row=1, column=0, sticky=tk.E)
+		self.lat_label.grid(row=3, column=0, sticky=tk.E, pady=10)
 		self.lat_input = tk.Entry(self, textvariable=self.latitude, background='#000000', foreground='#ff0000', highlightbackground='#ff0000')
-		self.lat_input.grid(row=1, column=1, sticky=tk.W)
+		self.lat_input.grid(row=3, column=1, sticky=tk.W)
 
 		#longitude input
 		self.longitude = tk.StringVar(value=self.config.get('observer', 'longitude', fallback=0.0))
 		self.longitude.trace('w', lambda *args: self.update_config())
 		self.lon_label = tk.Label(self, text='Longitude:', background='#000000', foreground='#ff0000')
-		self.lon_label.grid(row=2, column=0, sticky=tk.E)
+		self.lon_label.grid(row=4, column=0, sticky=tk.E)
 		self.lon_input = tk.Entry(self, textvariable=self.longitude, background='#000000', foreground='#ff0000', highlightbackground='#ff0000')
-		self.lon_input.grid(row=2, column=1, sticky=tk.W)
+		self.lon_input.grid(row=4, column=1, sticky=tk.W)
 
 		self.update()
 
@@ -78,7 +86,23 @@ class PolarFinder(tk.Tk):
 			else:
 				self.canvas.create_line(c_x+r[1]*cos(theta), c_y-r[1]*sin(theta), c_x+r[5]*cos(theta), c_y-r[5]*sin(theta), fill="#ff0000", width=1)
 
+		#update ephem
+		observer = ephem.Observer()
+		observer.epoch = ephem.now()
+		observer.date = ephem.now()
+		observer.lat = self.config.get('observer', 'latitude')
+		observer.lon = self.config.get('observer', 'longitude')
 
+		polaris = ephem.star('Polaris')
+		polaris.compute(observer)
+		ha = ephem.hours(observer.sidereal_time() - polaris.a_ra).norm
+
+		#labels
+		self.lst_label.config(text='Local Sidereal Time: ' + str(observer.sidereal_time()))
+		self.hour_angle_label.config(text='Polaris Hour Angle: ' + str(ha))
+
+		#update every second
+		self.after(1000, self.update)
 
 if __name__ == "__main__":
 	window = PolarFinder()
