@@ -86,25 +86,29 @@ class PolarFinder(tk.Tk):
 			else:
 				self.canvas.create_line(c_x+r[1]*cos(theta), c_y-r[1]*sin(theta), c_x+r[5]*cos(theta), c_y-r[5]*sin(theta), fill="#ff0000", width=1)
 
-		#update ephem
-		observer = ephem.Observer()
-		observer.epoch = ephem.now()
-		observer.date = ephem.now()
-		observer.lat = self.config.get('observer', 'latitude')
-		observer.lon = self.config.get('observer', 'longitude')
+		try:
+			#update ephem
+			observer = ephem.Observer()
+			observer.epoch = ephem.now()
+			observer.date = ephem.now()
+			observer.lat = self.config.get('observer', 'latitude', fallback=0.0)
+			observer.lon = self.config.get('observer', 'longitude', fallback=0.0)
 
-		polaris = ephem.star('Polaris')
-		polaris.compute(observer)
-		ha = ephem.hours(observer.sidereal_time() - polaris.a_ra).norm
+			polaris = ephem.star('Polaris')
+			polaris.compute(observer)
+			ha = ephem.hours(observer.sidereal_time() - polaris.a_ra).norm
 
-		#labels
-		self.lst_label.config(text='Local Sidereal Time: ' + str(observer.sidereal_time()))
-		self.hour_angle_label.config(text='Polaris Hour Angle: ' + str(ha))
+			#labels
+			self.lst_label.config(text='Local Sidereal Time: ' + str(observer.sidereal_time()))
+			self.hour_angle_label.config(text='Polaris Hour Angle: ' + str(ha))
 
-		#polaris
-		theta = float(ha) + ephem.pi/2
-		self.canvas.create_line(c_x, c_y, c_x+r[0]*cos(theta), c_y-r[0]*sin(theta), fill="#ff0000", width=2)
-		self.canvas.create_oval(c_x+r[3]*cos(theta)-5, c_y-r[3]*sin(theta)-5, c_x+r[3]*cos(theta)+5, c_y-r[3]*sin(theta)+5, fill="#ff0000")
+			#polaris
+			theta = float(ha) + ephem.pi/2
+			self.canvas.create_line(c_x, c_y, c_x+r[0]*cos(theta), c_y-r[0]*sin(theta), fill="#ff0000", width=2)
+			self.canvas.create_oval(c_x+r[3]*cos(theta)-5, c_y-r[3]*sin(theta)-5, c_x+r[3]*cos(theta)+5, c_y-r[3]*sin(theta)+5, fill="#ff0000")
+		except ValueError:
+			self.lst_label.config(text='Local Sidereal Time: ???')
+			self.hour_angle_label.config(text='Polaris Hour Angle: ???')
 
 		#update every second
 		self.after(1000, self.update)
